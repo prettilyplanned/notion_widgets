@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Study desk · candle &amp; notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F5EDE9;
+    --cream-deep:#ECDCD4;
+    --desk:#EFE1DA;
+    --desk-edge:#E4CFC4;
+    --wax:#FFF8F1;
+    --wax-shade:#F1DECF;
+    --ink:#6B5560;
+    --ink-soft:#A6919B;
+    --ink-faint:#C7B7BF;
+    --pink:#F5D3D6;
+    --pink-deep:#EBAFBB;
+    --lavender:#E3D8F2;
+    --lavender-deep:#CBB6E8;
+    --mint:#D8ECE1;
+    --mint-deep:#AEDCC3;
+    --butter:#FBEFC6;
+    --butter-deep:#F0DB9B;
+    --flame-out:#FFB884;
+    --flame-in:#FFE9A8;
+    --shadow: 0 10px 30px rgba(107,85,96,0.14);
+    --shadow-soft: 0 4px 14px rgba(107,85,96,0.10);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Quicksand', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  .scene{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px 16px;
+  }
+
+  .desk{
+    position:relative;
+    width:100%;
+    max-width:720px;
+    background:#F5EDE9;
+    border-radius:28px;
+    padding:34px 28px 26px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:22px;
+    align-items:stretch;
+    justify-content:center;
+  }
+
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    font-weight:600;
+    text-align:center;
+    width:100%;
+    margin-bottom:-6px;
+  }
+
+  /* ---------- CANDLE ---------- */
+  .candle-col{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-end;
+    width:150px;
+    flex-shrink:0;
+    position:relative;
+    z-index:2;
+    transform:translateY(-20px);
+  }
+
+  .candle-stage{
+    position:relative;
+    width:100%;
+    height:210px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
+
+  .candle-body{
+    position:relative;
+    width:74px;
+    height:180px;
+    display:flex;
+    align-items:flex-end;
+  }
+
+  .wax-fill{
+    position:absolute;
+    bottom:0;
+    left:0;
+    width:100%;
+    height:160px; /* JS controls this */
+    background:linear-gradient(180deg, var(--wax) 0%, var(--wax-shade) 100%);
+    border-radius:10px 10px 5px 5px;
+    box-shadow: inset 0 -6px 10px rgba(210,180,165,0.25), var(--shadow-soft);
+    transition:height 0.6s cubic-bezier(.4,0,.2,1);
+  }
+
+  .wax-fill::before{
+    /* melted pool dip on top */
+    content:"";
+    position:absolute;
+    top:-3px; left:50%;
+    transform:translateX(-50%);
+    width:88%;
+    height:12px;
+    border-radius:50%;
+    background:radial-gradient(ellipse at center, var(--wax-shade) 0%, var(--wax) 70%);
+    opacity:0.9;
+  }
+
+  .drip{
+    position:absolute;
+    top:6px;
+    width:9px;
+    height:34px;
+    background:linear-gradient(180deg, var(--wax) 0%, var(--wax-shade) 100%);
+    border-radius:0 0 50% 50% / 0 0 60% 60%;
+    opacity:0.85;
+  }
+  .drip-a{ left:-3px; height:26px; }
+  .drip-b{ right:-2px; height:20px; top:14px; }
+
+  .wick{
+    position:absolute;
+    top:-13px; left:50%;
+    transform:translateX(-50%);
+    width:3px;
+    height:15px;
+    background:#8A6E5E;
+    border-radius:2px;
+    z-index:3;
+  }
+
+  .flame-wrap{
+    position:absolute;
+    top:-46px;
+    left:50%;
+    transform:translateX(-50%);
+    width:24px;
+    height:38px;
+    z-index:3;
+  }
+
+  .flame{
+    position:absolute;
+    bottom:0; left:50%;
+    transform:translateX(-50%);
+    width:20px;
+    height:34px;
+    border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
+    background:radial-gradient(circle at 50% 70%, var(--flame-in) 0%, var(--flame-out) 60%, rgba(255,184,132,0) 100%);
+    filter:blur(0.2px);
+    transform-origin:50% 100%;
+    animation: flicker 2.6s ease-in-out infinite;
+    box-shadow: 0 0 14px 3px rgba(255,201,140,0.55);
+  }
+  .flame::after{
+    content:"";
+    position:absolute;
+    bottom:2px; left:50%;
+    transform:translateX(-50%);
+    width:8px; height:14px;
+    border-radius:50%;
+    background:radial-gradient(circle, #fff6df 0%, var(--flame-in) 80%);
+    opacity:0.9;
+  }
+
+  @keyframes flicker{
+    0%,100%{ transform:translateX(-50%) rotate(-2deg) scaleY(1); }
+    25%{ transform:translateX(-50%) rotate(2deg) scaleY(1.05); }
+    50%{ transform:translateX(-50%) rotate(-1deg) scaleY(0.96); }
+    75%{ transform:translateX(-50%) rotate(3deg) scaleY(1.03); }
+  }
+
+  .candle-stage.paused .flame{ animation-duration:5.2s; opacity:0.75; }
+
+  .holder{
+    width:104px;
+    height:16px;
+    border-radius:50%;
+    background:radial-gradient(ellipse at center, var(--butter) 0%, var(--butter-deep) 100%);
+    box-shadow: var(--shadow-soft);
+    margin-top:-4px;
+  }
+
+  .desk-shadow-oval{
+    width:120px; height:14px;
+    border-radius:50%;
+    background:rgba(107,85,96,0.10);
+    margin-top:8px;
+    filter:blur(2px);
+  }
+
+  /* ---------- TIMER PLAQUE ---------- */
+  .timer-col{
+    flex:1 1 220px;
+    min-width:220px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    padding:6px 4px;
+  }
+
+  .mode-label{
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    font-weight:600;
+  }
+
+  .time-display{
+    font-family:'Fraunces', serif;
+    font-optical-sizing:auto;
+    font-weight:500;
+    font-size:56px;
+    line-height:1;
+    color:var(--ink);
+    letter-spacing:0.01em;
+    user-select:none;
+  }
+
+  .chips{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+
+  .chip{
+    border:none;
+    background:rgba(255,255,255,0.55);
+    color:var(--ink-soft);
+    font-family:'Quicksand', sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    padding:7px 13px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:all 0.2s ease;
+    box-shadow: inset 0 0 0 1px rgba(107,85,96,0.08);
+  }
+  .chip:hover{ background:rgba(255,255,255,0.85); }
+  .chip.active{
+    background:var(--lavender-deep);
+    color:#4E3E5C;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:2px;
+  }
+
+  .btn-primary{
+    font-family:'Quicksand', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    color:#4E3E5C;
+    background:linear-gradient(180deg, var(--pink) 0%, var(--pink-deep) 100%);
+    border:none;
+    padding:11px 26px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow: var(--shadow-soft);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-primary:hover{ transform:translateY(-1px); box-shadow:var(--shadow); }
+  .btn-primary:active{ transform:translateY(0); }
+
+  .btn-ghost{
+    font-family:'Quicksand', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    color:var(--ink-soft);
+    background:transparent;
+    border:none;
+    cursor:pointer;
+    text-decoration:underline;
+    text-decoration-color:var(--ink-faint);
+    text-underline-offset:3px;
+  }
+  .btn-ghost:hover{ color:var(--ink); }
+
+  .btn-icon{
+    border:none;
+    background:rgba(255,255,255,0.55);
+    width:34px; height:34px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:14px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink-soft);
+    transition:background 0.2s ease;
+  }
+  .btn-icon:hover{ background:rgba(255,255,255,0.85); }
+
+  .session-hint{
+    font-size:11.5px;
+    color:var(--ink-faint);
+    margin-top:-4px;
+    min-height:14px;
+    text-align:center;
+  }
+
+  /* ---------- NOTES ---------- */
+  .notes-col{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:172px;
+    flex-shrink:0;
+    gap:10px;
+  }
+
+  .notes-stack{
+    position:relative;
+    width:150px;
+    height:150px;
+  }
+
+  .sticky{
+    position:absolute;
+    top:0; left:0;
+    width:150px;
+    min-height:130px;
+    padding:16px 14px 34px;
+    border-radius:3px;
+    font-family:'Quicksand', sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    line-height:1.4;
+    color:#5C4A52;
+    box-shadow: 0 6px 14px rgba(107,85,96,0.16);
+    cursor:default;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    background-image: repeating-linear-gradient(rgba(255,255,255,0.35) 0 21px, rgba(255,255,255,0) 21px 22px);
+  }
+
+  .note-text{ outline:none; min-height:1.4em; }
+  .note-text:empty::before{
+    content:"type your task…";
+    color:rgba(92,74,82,0.45);
+    font-weight:600;
+  }
+  .sticky:has(.note-text:focus){ box-shadow:0 6px 18px rgba(107,85,96,0.24); }
+
+  .sticky.c-pink{ background-color:var(--pink); }
+  .sticky.c-lavender{ background-color:var(--lavender); }
+  .sticky.c-mint{ background-color:var(--mint); }
+  .sticky.c-butter{ background-color:var(--butter); }
+
+  .sticky .check-btn{
+    position:absolute;
+    bottom:9px; right:9px;
+    width:24px; height:24px;
+    border-radius:50%;
+    border:none;
+    background:rgba(255,255,255,0.6);
+    color:#5C4A52;
+    font-size:13px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background 0.2s ease, transform 0.15s ease;
+  }
+  .sticky .check-btn:hover{ background:rgba(255,255,255,0.95); transform:scale(1.08); }
+
+  @keyframes crumple{
+    0%{ transform:rotate(var(--rot)) scale(1); border-radius:3px; }
+    30%{ transform:rotate(calc(var(--rot) - 10deg)) scale(0.82); border-radius:40% 60% 55% 45%; }
+    60%{ transform:rotate(calc(var(--rot) + 18deg)) scale(0.5) translateY(6px); border-radius:50%; }
+    100%{ transform:rotate(calc(var(--rot) + 30deg)) scale(0.18) translateY(30px); border-radius:50%; opacity:0; }
+  }
+  .sticky.crumpling{
+    animation: crumple 0.55s ease-in forwards;
+    pointer-events:none;
+  }
+
+  .add-note{
+    width:150px;
+    padding:9px 0;
+    border-radius:999px;
+    border:1.5px dashed var(--ink-faint);
+    background:transparent;
+    color:var(--ink-soft);
+    font-family:'Quicksand', sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    cursor:pointer;
+    transition:all 0.2s ease;
+  }
+  .add-note:hover{ background:rgba(255,255,255,0.5); color:var(--ink); }
+
+  .done-counter{
+    font-size:11.5px;
+    color:var(--ink-faint);
+    font-weight:600;
+  }
+
+  @media (max-width:560px){
+    .desk{ padding:26px 18px 20px; gap:24px; }
+    .candle-col, .notes-col{ width:100%; align-items:center; }
+    .candle-stage{ height:210px; }
+    .time-display{ font-size:46px; }
+    .notes-stack{ margin:0 auto; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .flame, .sticky, .sticky.crumpling{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scene">
+  <div class="desk">
+    <span class="eyebrow">study corner</span>
+
+    <!-- CANDLE -->
+    <div class="candle-col">
+      <div class="candle-stage" id="candleStage">
+        <div class="candle-body">
+          <div class="wax-fill" id="waxFill">
+            <div class="drip drip-a"></div>
+            <div class="drip drip-b"></div>
+            <div class="wick"></div>
+            <div class="flame-wrap"><div class="flame"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="holder"></div>
+      <div class="desk-shadow-oval"></div>
+    </div>
+
+    <!-- TIMER -->
+    <div class="timer-col">
+      <div class="mode-label" id="modeLabel">Focus</div>
+      <div class="time-display" id="timeDisplay">25:00</div>
+      <div class="chips" id="chips">
+        <button class="chip active" data-mode="focus" data-mins="25">Focus · 25</button>
+        <button class="chip" data-mode="short" data-mins="5">Break · 5</button>
+      </div>
+      <div class="controls">
+        <button class="btn-primary" id="toggleBtn">Start</button>
+        <button class="btn-ghost" id="resetBtn">Reset</button>
+        <button class="btn-icon" id="soundBtn" aria-label="toggle sound" title="sound">🔈</button>
+      </div>
+      <div class="session-hint" id="sessionHint">&nbsp;</div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="notes-col">
+      <div class="notes-stack" id="notesStack"></div>
+      <button class="add-note" id="addNoteBtn">+ new note</button>
+      <div class="done-counter" id="doneCounter">0 completed</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= TIMER ================= */
+  const DURATIONS = { focus: 25*60, short: 5*60 };
+  const LABELS = { focus: "Focus", short: "Break" };
+
+  let mode = "focus";
+  let totalSeconds = DURATIONS[mode];
+  let secondsLeft = totalSeconds;
+  let running = false;
+  let endTime = null;      // timestamp when timer should hit 0
+  let rafId = null;
+  let soundOn = false;
+
+  const timeDisplay = document.getElementById('timeDisplay');
+  const modeLabel = document.getElementById('modeLabel');
+  const toggleBtn = document.getElementById('toggleBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const soundBtn = document.getElementById('soundBtn');
+  const sessionHint = document.getElementById('sessionHint');
+  const chips = document.querySelectorAll('.chip');
+  const candleStage = document.getElementById('candleStage');
+  const waxFill = document.getElementById('waxFill');
+
+  const WAX_MAX = 160;
+  const WAX_MIN = 44;
+
+  function formatTime(s){
+    const m = Math.floor(s/60).toString().padStart(2,'0');
+    const sec = Math.floor(s%60).toString().padStart(2,'0');
+    return m+":"+sec;
+  }
+
+  function updateWax(){
+    const frac = Math.max(0, Math.min(1, secondsLeft/totalSeconds));
+    const h = WAX_MIN + frac*(WAX_MAX-WAX_MIN);
+    waxFill.style.height = h+"px";
+  }
+
+  function render(){
+    timeDisplay.textContent = formatTime(secondsLeft);
+    modeLabel.textContent = LABELS[mode];
+    updateWax();
+  }
+
+  function setMode(newMode, resetRunning){
+    mode = newMode;
+    totalSeconds = DURATIONS[mode];
+    secondsLeft = totalSeconds;
+    chips.forEach(c => c.classList.toggle('active', c.dataset.mode === mode));
+    if(resetRunning){ stopTicking(); running=false; toggleBtn.textContent="Start"; candleStage.classList.remove('paused'); }
+    render();
+  }
+
+  function tick(){
+    if(!running) return;
+    const now = Date.now();
+    secondsLeft = Math.max(0, Math.round((endTime - now)/1000));
+    render();
+    if(secondsLeft <= 0){
+      onFinish();
+      return;
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function startTicking(){
+    endTime = Date.now() + secondsLeft*1000;
+    running = true;
+    candleStage.classList.remove('paused');
+    toggleBtn.textContent = "Pause";
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function stopTicking(){
+    running = false;
+    candleStage.classList.add('paused');
+    if(rafId) cancelAnimationFrame(rafId);
+  }
+
+  function onFinish(){
+    stopTicking();
+    playChime();
+    sessionHint.textContent = mode === 'focus' ? "candle burned down — nice work! moving to a break" : "break's over — back to focus";
+    const next = mode === 'focus' ? 'short' : 'focus';
+    setTimeout(() => {
+      setMode(next, true);
+      sessionHint.textContent = "\u00A0";
+      startTicking();
+      toggleBtn.textContent = "Pause";
+    }, 1400);
+  }
+
+  toggleBtn.addEventListener('click', () => {
+    if(running){
+      stopTicking();
+      toggleBtn.textContent = "Resume";
+    } else {
+      if(secondsLeft <= 0){ secondsLeft = totalSeconds; }
+      startTicking();
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    stopTicking();
+    secondsLeft = totalSeconds;
+    toggleBtn.textContent = "Start";
+    sessionHint.textContent = "\u00A0";
+    render();
+  });
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      setMode(chip.dataset.mode, true);
+      sessionHint.textContent = "\u00A0";
+    });
+  });
+
+  /* gentle chime via WebAudio, two soft notes */
+  let audioCtx = null;
+  function playChime(){
+    if(!soundOn) return;
+    try{
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [660, 880];
+      notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, audioCtx.currentTime + i*0.22);
+        gain.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + i*0.22 + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i*0.22 + 0.6);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + i*0.22);
+        osc.stop(audioCtx.currentTime + i*0.22 + 0.65);
+      });
+    }catch(e){ /* audio unavailable, fail silently */ }
+  }
+
+  soundBtn.addEventListener('click', () => {
+    soundOn = !soundOn;
+    soundBtn.textContent = soundOn ? "🔔" : "🔈";
+    localStorage.setItem('deskwidget-sound', soundOn ? '1':'0');
+    if(soundOn){
+      try{ audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); }catch(e){}
+    }
+  });
+
+  const savedSound = localStorage.getItem('deskwidget-sound');
+  if(savedSound === '1'){ soundOn = true; soundBtn.textContent = "🔔"; }
+
+  render();
+  candleStage.classList.add('paused');
+
+  /* ================= NOTES ================= */
+  const COLORS = ['c-pink','c-lavender','c-mint','c-butter'];
+  const STORAGE_KEY = 'deskwidget-notes';
+  const DONE_KEY = 'deskwidget-done';
+
+  const notesStack = document.getElementById('notesStack');
+  const addNoteBtn = document.getElementById('addNoteBtn');
+  const doneCounter = document.getElementById('doneCounter');
+
+  function loadNotes(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return [
+      { id: cryptoId(), text: '', color: 'c-butter', rot: -3 }
+    ];
+  }
+
+  function cryptoId(){
+    return 'n' + Math.random().toString(36).slice(2,9);
+  }
+
+  let notes = loadNotes();
+  let doneCount = parseInt(localStorage.getItem(DONE_KEY) || '0', 10);
+
+  function saveNotes(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+  }
+  function saveDone(){
+    localStorage.setItem(DONE_KEY, String(doneCount));
+  }
+
+  function renderNotes(){
+    notesStack.innerHTML = '';
+    doneCounter.textContent = doneCount + ' completed';
+
+    // render from bottom of array to top, so notes[0] is the topmost/frontmost
+    const visible = notes.slice(0, 6); // cap for perf
+    for(let i = visible.length - 1; i >= 0; i--){
+      const note = visible[i];
+      const el = document.createElement('div');
+      el.className = 'sticky ' + note.color;
+      el.style.setProperty('--rot', note.rot + 'deg');
+      el.style.transform = 'rotate(' + note.rot + 'deg) translate(' + (i*1.5) + 'px,' + (i*1.5) + 'px)';
+      el.style.zIndex = 100 - i;
+      el.dataset.id = note.id;
+
+      // the editable text lives in its own element, separate from the
+      // check button, so the button is never part of the editable DOM
+      // (mixing them caused the caret to jump to the wrong spot)
+      const textEl = document.createElement('div');
+      textEl.className = 'note-text';
+      textEl.setAttribute('spellcheck', 'false');
+      textEl.textContent = note.text;
+
+      if(i === 0){
+        textEl.setAttribute('contenteditable', 'true');
+        textEl.addEventListener('blur', () => {
+          note.text = textEl.textContent.trim();
+          saveNotes();
+        });
+
+        const btn = document.createElement('button');
+        btn.className = 'check-btn';
+        btn.setAttribute('aria-label', 'mark as done');
+        btn.textContent = '✓';
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          crumpleTop();
+        });
+        el.appendChild(textEl);
+        el.appendChild(btn);
+      } else {
+        textEl.setAttribute('contenteditable', 'false');
+        el.appendChild(textEl);
+      }
+
+      notesStack.appendChild(el);
+    }
+  }
+
+  function crumpleTop(){
+    const topText = notesStack.querySelector('.note-text[contenteditable="true"]');
+    if(!topText) return;
+    const topEl = topText.closest('.sticky');
+    topText.setAttribute('contenteditable','false');
+    topEl.classList.add('crumpling');
+    topEl.addEventListener('animationend', () => {
+      notes.shift();
+      doneCount += 1;
+      saveNotes();
+      saveDone();
+      renderNotes();
+    }, { once:true });
+  }
+
+  addNoteBtn.addEventListener('click', () => {
+    const color = COLORS[Math.floor(Math.random()*COLORS.length)];
+    const rot = Math.round((Math.random()*10 - 5)*10)/10;
+    notes.unshift({ id: cryptoId(), text: '', color, rot });
+    saveNotes();
+    renderNotes();
+    requestAnimationFrame(() => {
+      const topText = notesStack.querySelector('.note-text[contenteditable="true"]');
+      if(topText){ placeCaretAtEnd(topText); }
+    });
+  });
+
+  function placeCaretAtEnd(el){
+    el.focus();
+    if(typeof window.getSelection !== 'undefined' && typeof document.createRange !== 'undefined'){
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }
+
+  renderNotes();
+
+})();
+</script>
+</body>
+</html>
