@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Reloj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;1,400&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F5EDE9;
+    --card: #F5EDE9;
+    --ink: #6b5d59;
+    --ink-soft: #a9968f;
+    --blush: #e7c9c3;
+    --blush-deep: #d9a9a1;
+    --lilac: #d9cbe0;
+    --sage: #cdd8c9;
+    --gold: #cdae7d;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    background: var(--bg);
+    font-family: 'Quicksand', sans-serif;
+    color: var(--ink);
+    overflow: hidden;
+  }
+
+  .stage{
+    width:100%;
+    height:100vh;
+    min-height: 320px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px;
+  }
+
+  .card{
+    position: relative;
+    width: min(340px, 90vw);
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    background: var(--card);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .card::before{
+    content:"";
+    position:absolute;
+    inset: 14px;
+    border-radius:50%;
+    border: 1px solid rgba(217,169,161,0.25);
+  }
+
+  .ticks{
+    position:absolute;
+    inset:0;
+  }
+  .tick{
+    position:absolute;
+    left:50%;
+    top:8%;
+    width:2px;
+    height:10px;
+    background: var(--blush-deep);
+    opacity:0.55;
+    transform-origin: 50% calc(50vw); /* fallback, overridden inline */
+  }
+  .tick.major{
+    height:14px;
+    width:2px;
+    background: var(--ink);
+    opacity:0.65;
+  }
+
+  .label{
+    position:absolute;
+    font-family:'Fraunces', serif;
+    font-weight:400;
+    font-size: clamp(11px, 3vw, 14px);
+    color: var(--ink-soft);
+    letter-spacing: 1px;
+  }
+
+  .hand{
+    position:absolute;
+    left:50%;
+    bottom:50%;
+    transform-origin:50% 100%;
+    border-radius: 6px;
+  }
+  .hand-hour{
+    width: 5px;
+    height: 21%;
+    background: var(--ink);
+    margin-left:-2.5px;
+    border-radius: 5px 5px 2px 2px;
+  }
+  .hand-min{
+    width: 3.5px;
+    height: 30%;
+    background: var(--ink);
+    margin-left:-1.75px;
+    border-radius: 5px 5px 2px 2px;
+  }
+  .hand-sec{
+    width: 1.5px;
+    height: 33%;
+    background: var(--blush-deep);
+    margin-left:-0.75px;
+  }
+  .hand-sec::after{
+    content:"";
+    position:absolute;
+    bottom:-14px;
+    left:50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius:50%;
+    background: var(--blush-deep);
+  }
+
+  .center-dot{
+    position:absolute;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background: var(--gold);
+    border: 4px solid var(--card);
+    z-index:5;
+  }
+
+  .charm{
+    position:absolute;
+    top:6%;
+    font-size: 15px;
+    filter: saturate(0.85) opacity(0.9);
+  }
+
+  .digital{
+    position:absolute;
+    left:50%;
+    top: 66%;
+    transform: translate(-50%, -50%);
+    text-align:center;
+    white-space:nowrap;
+    z-index:3;
+  }
+  .digital .time{
+    font-family:'Fraunces', serif;
+    font-style: italic;
+    font-weight:400;
+    font-size: clamp(26px, 8.5vw, 32px);
+    color: var(--ink);
+    letter-spacing: 0.5px;
+  }
+
+  .stage-wrap{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="stage-wrap">
+    <div class="card" id="clockFace">
+      <div class="ticks" id="ticks"></div>
+
+      <div class="hand hand-hour" id="hourHand"></div>
+      <div class="hand hand-min" id="minHand"></div>
+      <div class="hand hand-sec" id="secHand"></div>
+      <div class="center-dot"></div>
+
+      <div class="digital">
+        <div class="time" id="digitalTime">00:00</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ticksContainer = document.getElementById('ticks');
+  const radius = 50; // % from center
+
+  for (let i = 0; i < 60; i++){
+    const angle = i * 6;
+    const isMajor = i % 5 === 0;
+    const tick = document.createElement('div');
+    tick.className = 'tick' + (isMajor ? ' major' : '');
+    tick.style.transform = `translate(-50%, 0) rotate(${angle}deg)`;
+    tick.style.transformOrigin = `50% ${radius}cqw`;
+    ticksContainer.appendChild(tick);
+  }
+
+  // Reposicionamos ticks usando JS puro con círculo trigonométrico
+  function layoutTicks(){
+    const face = document.getElementById('clockFace');
+    const size = face.clientWidth;
+    const center = size / 2;
+    const r = size * 0.44;
+    const rInner = size * 0.40;
+
+    document.querySelectorAll('.tick').forEach((tick, i) => {
+      const angleDeg = i * 6 - 90;
+      const angleRad = angleDeg * Math.PI / 180;
+      const isMajor = tick.classList.contains('major');
+      const len = isMajor ? size * 0.065 : size * 0.028;
+      const rStart = size * 0.415;
+
+      const x1 = center + rStart * Math.cos(angleRad);
+      const y1 = center + rStart * Math.sin(angleRad);
+
+      tick.style.position = 'absolute';
+      tick.style.left = x1 + 'px';
+      tick.style.top = y1 + 'px';
+      tick.style.width = (isMajor ? 3.2 : 1.6) + 'px';
+      tick.style.height = len + 'px';
+      tick.style.transform = `rotate(${angleDeg + 90}deg)`;
+      tick.style.transformOrigin = 'top center';
+      tick.style.marginLeft = (isMajor ? -1.6 : -0.8) + 'px';
+    });
+  }
+
+  function tick(){
+    const now = new Date();
+    const h = now.getHours() % 12;
+    const m = now.getMinutes();
+    const s = now.getSeconds();
+
+    const hourDeg = (h + m/60) * 30;
+    const minDeg = (m + s/60) * 6;
+    const secDeg = s * 6;
+
+    document.getElementById('hourHand').style.transform = `rotate(${hourDeg}deg)`;
+    document.getElementById('minHand').style.transform = `rotate(${minDeg}deg)`;
+    document.getElementById('secHand').style.transform = `rotate(${secDeg}deg)`;
+
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(m).padStart(2,'0');
+    document.getElementById('digitalTime').textContent = `${hh}:${mm}`;
+  }
+
+  layoutTicks();
+  window.addEventListener('resize', layoutTicks);
+  tick();
+  setInterval(tick, 1000);
+</script>
+
+</body>
+</html>
