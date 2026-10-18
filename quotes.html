@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quote widget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --accent: #F5EDE9;
+        --ink: #6C4D38;
+        --stage: #FFFFFF;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+
+    body {
+        margin: 0;
+        padding: 24px 12px;
+        background: transparent;
+        font-family: Lora, "Times New Roman", Times, YuMincho, "Yu Mincho", "Hiragino Mincho ProN",
+                     "Noto Serif CJK JP", "Nanum Myeongjo", "Songti SC", serif;
+        text-transform: uppercase;
+        color: var(--ink);
+    }
+
+    .widget {
+        padding: 22px 18px 20px;
+        color: var(--ink);
+        background: transparent;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        max-width: 95%;
+        margin: auto;
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        box-shadow: 3px 3px 0 0 var(--ink);
+    }
+
+    .quote {
+        margin: 0;
+        font-size: calc(2em - 8pt);
+        line-height: 1.35;
+        letter-spacing: 0.02em;
+        text-align: center;
+        max-width: 28em;
+        text-wrap: balance;
+    }
+
+
+    @media (max-width: 480px) {
+        .quote { font-size: calc(1.5em - 6pt); }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="widget">
+        <p class="quote" id="quote"></p>
+    </div>
+</div>
+
+<script>
+    const quotes = [
+        "You are allowed to take up space",
+        "Small steps still move you forward",
+        "Soft doesn’t mean weak",
+        "Learn from yesterday, live for today, hope for tomorrow",
+        "Bloom at your own pace",
+        "Your energy is your most precious luxury",
+        "Trust the timing of your life",
+        "You’re doing better than you think",
+        "Be the main character of your own story",
+        "Good things take time, and so do you",
+        "Choose yourself, then do it again tomorrow",
+        "If you never try, you never know",
+        "Be a voice, not an echo",
+        "You don’t have to be perfect to be proud",
+        "Just because it's hard doesn't mean you can't",
+        "Your future self is already thanking you",
+        "You only have one live to live. Make it yours",
+        "You can't control the wind, but you can adjust your sails",
+        "Rest is part of the plan",
+        "Never regret anything that made you smile",
+        "Today focus on what you can do, not on what you cannot",
+        "Progress is prettier than perfection",
+        "Keep your standards high and your heart open",
+        "You’re exactly where you need to be",
+        "trust the process"
+    ];
+
+    function pickQuote() {
+        let index = Math.floor(Math.random() * quotes.length);
+        // Avoid showing the same quote twice in a row (when storage is available)
+        try {
+            const last = parseInt(localStorage.getItem('lastQuote'), 10);
+            if (quotes.length > 1 && index === last) {
+                index = (index + 1 + Math.floor(Math.random() * (quotes.length - 1))) % quotes.length;
+            }
+            localStorage.setItem('lastQuote', String(index));
+        } catch (e) { /* storage may be blocked inside embeds; ignore */ }
+        return quotes[index];
+    }
+
+    document.getElementById('quote').textContent = pickQuote();
+</script>
+
+</body>
+</html>
