@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Breathing guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@1,400;1,500&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5EDE9;
+    --ink:#6b5d59;
+    --gold:#cdae7d;
+    --line:rgba(107,93,89,0.28);
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top, 0px);
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+  }
+  html{ scroll-padding-top:env(safe-area-inset-top, 0px); }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  body{
+    background:transparent;
+    color:var(--ink);
+    font-family:'Quicksand', system-ui, sans-serif;
+    padding:16px 12px;
+    display:flex;
+    justify-content:center;
+  }
+
+  .widget{
+    width:100%;
+    max-width:320px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+  }
+
+  .stage{
+    position:relative;
+    width:100%;
+    max-width:260px;
+    aspect-ratio:1 / 1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* fixed outer ring: the size the breath grows into */
+  .ring{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    border:1px solid var(--gold);
+  }
+
+  .star{
+    position:absolute;
+    color:var(--gold);
+    font-size:13px;
+    line-height:1;
+    background:transparent;
+  }
+  .star.t{ top:-7px;    left:50%; transform:translateX(-50%); }
+  .star.r{ right:-7px;  top:50%;  transform:translateY(-50%); }
+  .star.b{ bottom:-7px; left:50%; transform:translateX(-50%); }
+  .star.l{ left:-7px;   top:50%;  transform:translateY(-50%); }
+
+  .orb{
+    position:absolute;
+    inset:12px;
+    border-radius:50%;
+    background:var(--bg);
+    border:1.5px solid var(--ink);
+    transform:scale(0.58);
+    will-change:transform;
+  }
+
+  .center{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    text-align:center;
+    pointer-events:none;
+  }
+  .phase{
+    font-family:Fraunces, Georgia, "Times New Roman", serif;
+    font-style:italic;
+    font-weight:400;
+    font-size:28px;
+    line-height:1.1;
+  }
+  .count{
+    font-size:14px;
+    font-weight:600;
+    opacity:0.7;
+    min-height:18px;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+  }
+  .chip{
+    appearance:none;
+    font:inherit;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink);
+    background:transparent;
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:6px 14px;
+    cursor:pointer;
+    transition:background 0.2s ease, border-color 0.2s ease;
+  }
+  .chip:hover{ border-color:var(--ink); }
+  .chip[aria-pressed="true"]{
+    background:var(--bg);
+    border-color:var(--ink);
+  }
+
+  .go{
+    appearance:none;
+    font:inherit;
+    font-size:14px;
+    font-weight:700;
+    color:var(--ink);
+    background:transparent;
+    border:1.5px solid var(--ink);
+    border-radius:999px;
+    padding:9px 34px;
+    cursor:pointer;
+    transition:background 0.2s ease;
+  }
+  .go:hover{ background:var(--bg); }
+
+  .chip:focus-visible, .go:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+
+  @media (max-width:360px){
+    .phase{ font-size:24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="widget">
+  <div class="stage">
+    <div class="ring"></div>
+    <span class="star t" aria-hidden="true">✦</span>
+    <span class="star r" aria-hidden="true">✦</span>
+    <span class="star b" aria-hidden="true">✦</span>
+    <span class="star l" aria-hidden="true">✦</span>
+    <div class="orb" id="orb"></div>
+    <div class="center" aria-live="polite">
+      <div class="phase" id="phase">Ready</div>
+      <div class="count" id="count"></div>
+    </div>
+  </div>
+
+  <div class="chips" id="chips" role="group" aria-label="Breathing rhythm"></div>
+
+  <button class="go" id="go" type="button">Begin</button>
+</div>
+
+<script>
+(function(){
+  // Each step: [label, seconds]
+  const PATTERNS = [
+    { id:'box',   name:'Box 4-4-4-4', steps:[['Inhale',4],['Hold',4],['Exhale',4],['Hold',4]] },
+    { id:'relax', name:'Relax 4-7-8', steps:[['Inhale',4],['Hold',7],['Exhale',8]] },
+    { id:'calm',  name:'Calm 4-6',    steps:[['Inhale',4],['Exhale',6]] }
+  ];
+
+  const MIN_SCALE = 0.58;
+  const MAX_SCALE = 1;
+
+  const orb = document.getElementById('orb');
+  const phaseEl = document.getElementById('phase');
+  const countEl = document.getElementById('count');
+  const chipsEl = document.getElementById('chips');
+  const goBtn = document.getElementById('go');
+
+  let pattern = PATTERNS[0];
+  let timeline = [];      // steps with start/end time and scale range
+  let cycleLength = 0;
+  let state = 'idle';     // idle | running | paused
+  let elapsed = 0;        // seconds into the cycle loop
+  let startedAt = 0;
+  let rafId = null;
+
+  function ease(p){ return 0.5 - Math.cos(Math.PI * p) / 2; }
+
+  function buildTimeline(){
+    timeline = [];
+    let t = 0;
+    let scale = MIN_SCALE;
+    pattern.steps.forEach(([label, secs]) => {
+      let from = scale, to = scale;
+      if (label === 'Inhale') to = MAX_SCALE;
+      if (label === 'Exhale') to = MIN_SCALE;
+      timeline.push({ label, secs, start:t, end:t + secs, from, to });
+      t += secs;
+      scale = to;
+    });
+    cycleLength = t;
+  }
+
+  function setScale(s){ orb.style.transform = 'scale(' + s.toFixed(4) + ')'; }
+
+  function frame(now){
+    elapsed = (now - startedAt) / 1000;
+    const t = elapsed % cycleLength;
+    const step = timeline.find(s => t >= s.start && t < s.end) || timeline[timeline.length - 1];
+    const p = Math.min(1, (t - step.start) / step.secs);
+    setScale(step.from + (step.to - step.from) * ease(p));
+
+    const remaining = Math.max(1, Math.ceil(step.secs - (t - step.start)));
+    if (phaseEl.textContent !== step.label) phaseEl.textContent = step.label;
+    countEl.textContent = remaining;
+
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function start(){
+    state = 'running';
+    goBtn.textContent = 'Pause';
+    startedAt = performance.now() - elapsed * 1000;
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function pause(){
+    state = 'paused';
+    cancelAnimationFrame(rafId);
+    goBtn.textContent = 'Resume';
+    phaseEl.textContent = 'Paused';
+    countEl.textContent = '';
+  }
+
+  function reset(){
+    cancelAnimationFrame(rafId);
+    state = 'idle';
+    elapsed = 0;
+    goBtn.textContent = 'Begin';
+    phaseEl.textContent = 'Ready';
+    countEl.textContent = '';
+    setScale(MIN_SCALE);
+  }
+
+  function selectPattern(p){
+    const wasRunning = state === 'running';
+    pattern = p;
+    buildTimeline();
+    reset();
+    renderChips();
+    if (wasRunning) start();
+  }
+
+  function renderChips(){
+    chipsEl.innerHTML = '';
+    PATTERNS.forEach(p => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.textContent = p.name;
+      b.setAttribute('aria-pressed', p === pattern ? 'true' : 'false');
+      b.addEventListener('click', () => { if (p !== pattern) selectPattern(p); });
+      chipsEl.appendChild(b);
+    });
+  }
+
+  goBtn.addEventListener('click', () => {
+    if (state === 'running') pause(); else start();
+  });
+
+  buildTimeline();
+  renderChips();
+  reset();
+})();
+</script>
+
+</body>
+</html>
