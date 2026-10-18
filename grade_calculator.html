@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grade calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@1,400;1,500&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5EDE9;
+    --ink:#6b5d59;
+    --gold:#cdae7d;
+    --line:rgba(107,93,89,0.28);
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top, 0px);
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+  }
+  html{ scroll-padding-top:env(safe-area-inset-top, 0px); }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  body{
+    background:transparent;
+    color:var(--ink);
+    font-family:'Quicksand', system-ui, sans-serif;
+    padding:16px 12px;
+    display:flex;
+    justify-content:center;
+  }
+
+  .widget{
+    width:100%;
+    max-width:420px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:18px;
+  }
+
+  /* result */
+  .panel{
+    width:100%;
+    background:var(--bg);
+    border-radius:20px;
+    padding:16px 18px 18px;
+    text-align:center;
+  }
+  .panel .star{
+    display:block;
+    color:var(--gold);
+    font-size:13px;
+    line-height:1;
+    margin-bottom:8px;
+  }
+  .panel .label{
+    font-size:13px;
+    font-weight:600;
+    opacity:0.7;
+  }
+  .panel .big{
+    font-family:Fraunces, Georgia, "Times New Roman", serif;
+    font-style:italic;
+    font-weight:400;
+    font-size:54px;
+    line-height:1.1;
+    margin:2px 0 8px;
+  }
+  .panel .msg{
+    font-size:14px;
+    font-weight:500;
+    line-height:1.45;
+    max-width:30em;
+    margin:0 auto;
+  }
+
+  /* goal */
+  .goal{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-size:14px;
+    font-weight:600;
+  }
+  .goal input{ width:58px; }
+
+  /* table */
+  .table{ width:100%; }
+  .head, .row{
+    display:grid;
+    grid-template-columns:1fr 60px 60px 22px;
+    gap:8px;
+    align-items:end;
+  }
+  .head{
+    font-size:12px;
+    font-weight:600;
+    opacity:0.7;
+    padding-bottom:2px;
+  }
+  .head span:nth-child(2), .head span:nth-child(3){ text-align:center; }
+  .row{ margin-top:8px; }
+
+  input{
+    font:inherit;
+    font-size:15px;
+    font-weight:500;
+    color:var(--ink);
+    background:transparent;
+    border:none;
+    border-bottom:1px solid var(--line);
+    border-radius:0;
+    padding:6px 2px;
+    width:100%;
+    min-width:0;
+    transition:border-color 0.2s ease;
+  }
+  input::placeholder{ color:var(--ink); opacity:0.35; }
+  input:hover{ border-bottom-color:var(--ink); }
+  input:focus{ outline:none; border-bottom:2px solid var(--gold); padding-bottom:5px; }
+  input.num{ text-align:center; }
+  input.bad{ border-bottom:2px solid var(--gold); padding-bottom:5px; }
+
+  .remove{
+    appearance:none;
+    font:inherit;
+    font-size:18px;
+    line-height:1;
+    color:var(--ink);
+    opacity:0.45;
+    background:transparent;
+    border:none;
+    cursor:pointer;
+    padding:6px 0;
+    transition:opacity 0.2s ease;
+  }
+  .remove:hover{ opacity:1; }
+
+  .note{
+    width:100%;
+    font-size:12.5px;
+    font-weight:600;
+    line-height:1.4;
+    color:var(--gold);
+    text-align:center;
+    min-height:0;
+  }
+  .note:empty{ display:none; }
+
+  .actions{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:10px;
+  }
+  .btn{
+    appearance:none;
+    font:inherit;
+    font-size:13px;
+    font-weight:700;
+    color:var(--ink);
+    background:transparent;
+    border:1.5px solid var(--ink);
+    border-radius:999px;
+    padding:8px 20px;
+    cursor:pointer;
+    transition:background 0.2s ease;
+  }
+  .btn:hover{ background:var(--bg); }
+  .btn.quiet{ border-color:var(--line); }
+  .btn.quiet:hover{ border-color:var(--ink); }
+
+  .btn:focus-visible, .remove:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+
+  @media (max-width:360px){
+    .panel .big{ font-size:46px; }
+    .head, .row{ grid-template-columns:1fr 54px 54px 20px; gap:6px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="widget">
+  <section class="panel" aria-live="polite">
+    <span class="star" aria-hidden="true">✦</span>
+    <div class="label" id="resLabel">Current average</div>
+    <div class="big" id="resValue">–</div>
+    <p class="msg" id="resMsg"></p>
+  </section>
+
+  <div class="goal">
+    <label for="goal">Goal grade</label>
+    <input class="num" id="goal" type="text" inputmode="decimal" autocomplete="off">
+    <span id="scale"></span>
+  </div>
+
+  <div class="table">
+    <div class="head" aria-hidden="true">
+      <span>Component</span><span>Grade</span><span>Weight %</span><span></span>
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <p class="note" id="note"></p>
+
+  <div class="actions">
+    <button class="btn" id="add" type="button">Add component</button>
+    <button class="btn quiet" id="clear" type="button">Clear grades</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Optional URL settings: ?max=100&goal=50 (defaults: scale 0-10, goal 5)
+  const params = new URLSearchParams(location.search);
+  const MAX = Number(params.get('max')) > 0 ? Number(params.get('max')) : 10;
+  const goalParam = Number(params.get('goal'));
+  const DEFAULT_GOAL = goalParam > 0 && goalParam <= MAX ? goalParam : MAX / 2;
+
+  const rowsEl = document.getElementById('rows');
+  const goalEl = document.getElementById('goal');
+  const noteEl = document.getElementById('note');
+  const labelEl = document.getElementById('resLabel');
+  const valueEl = document.getElementById('resValue');
+  const msgEl = document.getElementById('resMsg');
+
+  document.getElementById('scale').textContent = '/ ' + fmt(MAX);
+  goalEl.value = fmt(DEFAULT_GOAL);
+
+  function num(s){
+    s = String(s == null ? '' : s).trim().replace(',', '.');
+    if (s === '') return NaN;
+    return Number(s);
+  }
+
+  function fmt(n){ return String(Number(n.toFixed(2))); }
+
+  function addRow(name, grade, weight){
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML =
+      '<input class="name" type="text" placeholder="Name" aria-label="Component name" autocomplete="off">' +
+      '<input class="num grade" type="text" inputmode="decimal" placeholder="–" aria-label="Grade" autocomplete="off">' +
+      '<input class="num weight" type="text" inputmode="decimal" placeholder="%" aria-label="Weight in percent" autocomplete="off">' +
+      '<button class="remove" type="button" aria-label="Remove component">×</button>';
+    row.querySelector('.name').value = name || '';
+    row.querySelector('.grade').value = grade || '';
+    row.querySelector('.weight').value = weight || '';
+    rowsEl.appendChild(row);
+  }
+
+  function compute(){
+    const rows = Array.from(rowsEl.querySelectorAll('.row'));
+    let total = 0, gradedWeight = 0, weighted = 0, invalid = 0;
+
+    rows.forEach(row => {
+      const gEl = row.querySelector('.grade');
+      const wEl = row.querySelector('.weight');
+      const g = num(gEl.value);
+      const w = num(wEl.value);
+      const wOk = !isNaN(w) && w >= 0;
+      const gEmpty = gEl.value.trim() === '';
+      const gOk = !isNaN(g) && g >= 0 && g <= MAX;
+
+      wEl.classList.toggle('bad', wEl.value.trim() !== '' && !wOk);
+      gEl.classList.toggle('bad', !gEmpty && !gOk);
+      if ((wEl.value.trim() !== '' && !wOk) || (!gEmpty && !gOk)) invalid++;
+
+      if (!wOk || w === 0) return;
+      total += w;
+      if (gOk && !gEmpty){
+        gradedWeight += w;
+        weighted += g * w;
+      }
+    });
+
+    const notes = [];
+    if (invalid) notes.push('Check the highlighted values. Grades go from 0 to ' + fmt(MAX) + '.');
+    if (total > 0 && Math.abs(total - 100) > 0.001){
+      notes.push('Weights add up to ' + fmt(total) + '%. Results are scaled to match.');
+    }
+    noteEl.textContent = notes.join(' ');
+
+    if (total === 0){
+      labelEl.textContent = 'Current average';
+      valueEl.textContent = '–';
+      msgEl.textContent = 'Add a weight to each component to begin.';
+      return;
+    }
+
+    const earned = weighted / total;                 // points already secured on the scale
+    const remFrac = (total - gradedWeight) / total;  // share of the course still ungraded
+    const goal = num(goalEl.value);
+    const allGraded = remFrac < 1e-9;
+
+    labelEl.textContent = allGraded ? 'Final grade' : 'Current average';
+    valueEl.textContent = gradedWeight > 0 ? fmt(weighted / gradedWeight) : '–';
+
+    if (isNaN(goal) || goal < 0){
+      msgEl.textContent = 'Enter a goal grade to see what you need.';
+      return;
+    }
+
+    if (allGraded){
+      msgEl.textContent = earned >= goal - 1e-9
+        ? 'Goal reached.'
+        : 'You finished ' + fmt(goal - earned) + ' below your goal.';
+      return;
+    }
+
+    const needed = (goal - earned) / remFrac;
+    const remPct = fmt(remFrac * 100) + '%';
+
+    if (needed <= 0){
+      msgEl.textContent = 'Goal secured. Your graded work already adds up to ' + fmt(earned) + '.';
+    } else if (needed > MAX){
+      msgEl.textContent = 'Out of reach. With a perfect score on the remaining ' + remPct +
+                          ', you would finish at ' + fmt(earned + remFrac * MAX) + '.';
+    } else {
+      msgEl.textContent = 'You need an average of ' + fmt(needed) + ' on the remaining ' + remPct + '.';
+    }
+  }
+
+  rowsEl.addEventListener('input', compute);
+  goalEl.addEventListener('input', compute);
+
+  rowsEl.addEventListener('click', e => {
+    const btn = e.target.closest('.remove');
+    if (!btn) return;
+    if (rowsEl.children.length > 1) btn.closest('.row').remove();
+    else btn.closest('.row').querySelectorAll('input').forEach(i => { i.value = ''; });
+    compute();
+  });
+
+  document.getElementById('add').addEventListener('click', () => {
+    addRow();
+    rowsEl.lastElementChild.querySelector('.name').focus();
+    compute();
+  });
+
+  document.getElementById('clear').addEventListener('click', () => {
+    rowsEl.querySelectorAll('.grade').forEach(i => { i.value = ''; });
+    compute();
+  });
+
+  addRow('Midterm', '', '30');
+  addRow('Project', '', '20');
+  addRow('Final exam', '', '50');
+  compute();
+})();
+</script>
+
+</body>
+</html>
