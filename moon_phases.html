@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moon phase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@1,400;1,500&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5EDE9;
+    --ink:#6b5d59;
+    --gold:#cdae7d;
+    --line:rgba(107,93,89,0.28);
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top, 0px);
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+  }
+  html{ scroll-padding-top:env(safe-area-inset-top, 0px); }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  body{
+    background:transparent;
+    color:var(--ink);
+    font-family:'Quicksand', system-ui, sans-serif;
+    padding:16px 12px;
+    display:flex;
+    justify-content:center;
+  }
+
+  .widget{
+    width:100%;
+    max-width:320px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+
+  .stage{
+    position:relative;
+    width:100%;
+    max-width:220px;
+    aspect-ratio:1 / 1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .ring{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    border:1px solid var(--gold);
+  }
+
+  .star{
+    position:absolute;
+    color:var(--gold);
+    font-size:13px;
+    line-height:1;
+  }
+  .star.t{ top:-7px;    left:50%; transform:translateX(-50%); }
+  .star.r{ right:-7px;  top:50%;  transform:translateY(-50%); }
+  .star.b{ bottom:-7px; left:50%; transform:translateX(-50%); }
+  .star.l{ left:-7px;   top:50%;  transform:translateY(-50%); }
+
+  .moon{
+    position:absolute;
+    inset:14px;
+    width:calc(100% - 28px);
+    height:calc(100% - 28px);
+  }
+  .moon.south{ transform:scaleX(-1); }
+
+  .info{
+    text-align:center;
+  }
+  .name{
+    font-family:Fraunces, Georgia, "Times New Roman", serif;
+    font-style:italic;
+    font-weight:400;
+    font-size:28px;
+    line-height:1.15;
+  }
+  .illum{
+    margin-top:4px;
+    font-size:14px;
+    font-weight:600;
+    opacity:0.7;
+  }
+
+  .next{
+    width:100%;
+    display:grid;
+    grid-template-columns:1fr 1px 1fr;
+    align-items:center;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+  .divider{
+    width:1px;
+    height:34px;
+    background:var(--line);
+  }
+  .event{
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .event .label{
+    font-size:12px;
+    font-weight:600;
+    opacity:0.7;
+  }
+  .event .date{
+    font-family:Fraunces, Georgia, "Times New Roman", serif;
+    font-style:italic;
+    font-size:20px;
+    line-height:1.2;
+  }
+  .event .when{
+    font-size:12px;
+    font-weight:600;
+    color:var(--gold);
+  }
+
+  @media (max-width:360px){
+    .name{ font-size:24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="widget">
+  <div class="stage">
+    <div class="ring"></div>
+    <span class="star t" aria-hidden="true">✦</span>
+    <span class="star r" aria-hidden="true">✦</span>
+    <span class="star b" aria-hidden="true">✦</span>
+    <span class="star l" aria-hidden="true">✦</span>
+    <svg class="moon" id="moon" viewBox="-50 -50 100 100" role="img" aria-label="Moon phase">
+      <circle cx="0" cy="0" r="46" fill="#6b5d59"/>
+      <path id="lit" fill="#F5EDE9" d=""/>
+      <circle cx="0" cy="0" r="46" fill="none" stroke="#6b5d59" stroke-width="1.5"/>
+    </svg>
+  </div>
+
+  <div class="info">
+    <div class="name" id="name"></div>
+    <div class="illum" id="illum"></div>
+  </div>
+
+  <div class="next">
+    <div class="event">
+      <div class="label">Next full moon</div>
+      <div class="date" id="fullDate"></div>
+      <div class="when" id="fullWhen"></div>
+    </div>
+    <div class="divider" aria-hidden="true"></div>
+    <div class="event">
+      <div class="label">Next new moon</div>
+      <div class="date" id="newDate"></div>
+      <div class="when" id="newWhen"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const SYNODIC = 29.530588853;       // mean length of a lunar cycle, in days
+  const REF_NEW_MOON_JD = 2451550.1;  // new moon on 6 Jan 2000
+  const R = 46;
+  const NAMES = ['New Moon','Waxing Crescent','First Quarter','Waxing Gibbous',
+                 'Full Moon','Waning Gibbous','Last Quarter','Waning Crescent'];
+
+  // Add ?hemisphere=south to the embed URL to mirror the moon
+  const south = new URLSearchParams(location.search).get('hemisphere') === 'south';
+  if (south) document.getElementById('moon').classList.add('south');
+
+  function julianDay(ms){ return ms / 86400000 + 2440587.5; }
+
+  function whenText(days){
+    if (days < 0.5) return 'Today';
+    if (days < 1.5) return 'Tomorrow';
+    return 'in ' + Math.round(days) + ' days';
+  }
+
+  function dateText(ms){
+    return new Date(ms).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+  }
+
+  function litPath(frac){
+    const theta = 2 * Math.PI * frac;
+    const c = Math.cos(theta);
+    const rx = Math.max(0.01, R * Math.abs(c));
+    const waxing = frac < 0.5;
+    const limbSweep = waxing ? 1 : 0;                       // lit edge: right when waxing, left when waning
+    const termSweep = waxing ? (c > 0 ? 0 : 1) : (c < 0 ? 0 : 1);
+    return 'M 0 ' + (-R) +
+           ' A ' + R + ' ' + R + ' 0 0 ' + limbSweep + ' 0 ' + R +
+           ' A ' + rx.toFixed(3) + ' ' + R + ' 0 0 ' + termSweep + ' 0 ' + (-R) + ' Z';
+  }
+
+  function render(){
+    const nowMs = Date.now();
+    const age = (((julianDay(nowMs) - REF_NEW_MOON_JD) % SYNODIC) + SYNODIC) % SYNODIC;
+    const frac = age / SYNODIC;
+    const illum = (1 - Math.cos(2 * Math.PI * frac)) / 2;
+    const name = NAMES[Math.floor(frac * 8 + 0.5) % 8];
+
+    document.getElementById('lit').setAttribute('d', litPath(frac));
+    document.getElementById('name').textContent = name;
+    document.getElementById('illum').textContent = Math.round(illum * 100) + '% illuminated';
+    document.getElementById('moon').setAttribute('aria-label', name + ', ' + Math.round(illum * 100) + '% illuminated');
+
+    const daysToFull = ((0.5 - frac + 1) % 1) * SYNODIC;
+    const daysToNew = ((1 - frac) % 1) * SYNODIC || SYNODIC;
+
+    document.getElementById('fullDate').textContent = dateText(nowMs + daysToFull * 86400000);
+    document.getElementById('fullWhen').textContent = whenText(daysToFull);
+    document.getElementById('newDate').textContent = dateText(nowMs + daysToNew * 86400000);
+    document.getElementById('newWhen').textContent = whenText(daysToNew);
+  }
+
+  render();
+  setInterval(render, 60 * 60 * 1000); // keep it fresh if the page stays open
+})();
+</script>
+
+</body>
+</html>
