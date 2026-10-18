@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,11 +14,11 @@
     --text-faint:#B8ABA2;
     --ring:#E4D6CC;
 
-    --c-genial:#FBDD8B;
-    --c-bien:#BFE3C4;
+    --c-great:#FBDD8B;
+    --c-good:#BFE3C4;
     --c-normal:#CFCBEF;
     --c-meh:#F5C9A3;
-    --c-mal:#F1AFAF;
+    --c-bad:#F1AFAF;
   }
 
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -237,22 +237,22 @@
 
 <div class="card">
   <div class="header">
-    <div class="eyebrow">Hoy</div>
-    <div class="title">¿Cómo te sientes?</div>
+    <div class="eyebrow">Today</div>
+    <div class="title">How are you feeling?</div>
   </div>
 
   <div class="faces" id="faces"></div>
 
-  <div class="status" id="status">Toca una carita para guardar tu día</div>
+  <div class="status" id="status">Tap a face to save your day</div>
 
   <div class="divider"></div>
 
   <div class="cal-header">
-    <button class="nav-btn" id="prevMonth" aria-label="Mes anterior">
+    <button class="nav-btn" id="prevMonth" aria-label="Previous month">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
     <div class="cal-title" id="calTitle"></div>
-    <button class="nav-btn" id="nextMonth" aria-label="Mes siguiente">
+    <button class="nav-btn" id="nextMonth" aria-label="Next month">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
     </button>
   </div>
@@ -264,15 +264,15 @@
 <script>
 (function(){
   const MOODS = [
-    { key:'genial', label:'Genial', color:'var(--c-genial)', mouth:'M -9,4 Q 0,13 9,4' },
-    { key:'bien',   label:'Bien',   color:'var(--c-bien)',   mouth:'M -8,5 Q 0,10 8,5' },
+    { key:'great',  label:'Great',  color:'var(--c-great)',  mouth:'M -9,4 Q 0,13 9,4' },
+    { key:'good',   label:'Good',   color:'var(--c-good)',   mouth:'M -8,5 Q 0,10 8,5' },
     { key:'normal', label:'Normal', color:'var(--c-normal)', mouth:'M -8,6 L 8,6' },
     { key:'meh',    label:'Meh',    color:'var(--c-meh)',    mouth:'M -8,8 Q 0,3 8,8' },
-    { key:'mal',    label:'Mal',    color:'var(--c-mal)',    mouth:'M -9,10 Q 0,1 9,10' }
+    { key:'bad',    label:'Bad',    color:'var(--c-bad)',    mouth:'M -9,10 Q 0,1 9,10' }
   ];
 
-  const WEEKDAYS = ['L','M','X','J','V','S','D']; // semana empieza en lunes
-  const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const WEEKDAYS = ['M','T','W','T','F','S','S']; // week starts on Monday
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const STORAGE_KEY = 'mood-tracker-caritas-v1';
 
   const facesEl = document.getElementById('faces');
@@ -339,7 +339,7 @@
         log[todayKey()] = mood.key;
         saveLog(log);
         renderFaces(mood.key);
-        statusEl.innerHTML = `Guardado como <strong>${mood.label}</strong> hoy`;
+        statusEl.innerHTML = `Saved as <strong>${mood.label}</strong> today`;
         renderCalendar();
       });
       facesEl.appendChild(btn);
@@ -365,7 +365,7 @@
     calGridEl.innerHTML = '';
 
     const firstOfMonth = new Date(viewYear, viewMonth, 1);
-    // JS getDay(): 0=domingo..6=sábado -> convertir a semana que empieza en lunes
+    // JS getDay(): 0=Sunday..6=Saturday -> convert to a week that starts on Monday
     const jsDay = firstOfMonth.getDay();
     const leadingBlanks = (jsDay === 0) ? 6 : jsDay - 1;
 
@@ -423,7 +423,7 @@
     renderFaces(savedKey || null);
     if(savedKey){
       const mood = MOODS.find(m => m.key === savedKey);
-      statusEl.innerHTML = `Guardado como <strong>${mood.label}</strong> hoy`;
+      statusEl.innerHTML = `Saved as <strong>${mood.label}</strong> today`;
     }
     renderWeekdayRow();
     renderCalendar();
